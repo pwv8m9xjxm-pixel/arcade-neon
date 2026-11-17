@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  index.html — La SEULE page HTML du site « Arcade Néon »
+  ----------------------------------------------------------------------------
+  Elle contient trois « écrans » (des <section>) :
+    1. le menu d'accueil        → #ecran-menu
+    2. la page des classements  → #ecran-classements
+    3. l'écran de jeu           → #ecran-jeu
+  Un seul écran est visible à la fois : celui qui a la classe CSS « actif ».
+  C'est le fichier js/main.js qui passe d'un écran à l'autre.
+  ============================================================================
+-->
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <!-- Indispensable pour que le site s'affiche bien sur téléphone -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07071a">
+  <title>Arcade Néon</title>
+
+  <!-- Police pixel « Press Start 2P » de Google Fonts.
+       Sans internet, le CSS utilise automatiquement une police monospace de secours. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+
+  <!-- Notre feuille de style -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===================== 1. MENU D'ACCUEIL ===================== -->
+  <section id="ecran-menu" class="ecran actif">
+    <header class="fronton">
+      <h1 class="titre-neon">ARCADE<br><span>NÉON</span></h1>
+      <p class="clignote">INSÉREZ UNE PIÈCE</p>
+    </header>
+
+    <!-- Les cartes des jeux sont créées automatiquement par js/main.js -->
+    <div id="liste-jeux" class="grille-jeux"></div>
+
+    <button id="bouton-classements" class="bouton gros" type="button">🏆 CLASSEMENTS</button>
+
+    <p id="alerte-stockage" class="alerte" hidden>
+      ⚠ Sauvegarde impossible dans ce navigateur : les scores seront perdus en fermant la page.
+    </p>
+    <footer class="pied">Fait maison en HTML, CSS et JavaScript</footer>
+  </section>
+
+  <!-- ===================== 2. CLASSEMENTS ===================== -->
+  <section id="ecran-classements" class="ecran">
+    <div class="barre-haut">
+      <button id="classements-retour" class="bouton petit" type="button">◀ MENU</button>
+      <h2>CLASSEMENTS</h2>
+      <span class="espace-vide"></span>
+    </div>
+
+    <div class="contenu-classements">
+      <!-- Un onglet par jeu (créés par js/main.js) -->
+      <div id="onglets-jeux" class="onglets"></div>
+      <!-- Sous-onglets (seulement pour le Démineur et ses 3 niveaux) -->
+      <div id="onglets-niveaux" class="onglets sous-onglets"></div>
+
+      <h3 id="titre-classement" class="titre-classement"></h3>
+      <div id="conteneur-tableau"></div>
+
+      <div class="boutons">
+        <button id="bouton-effacer" class="bouton petit danger" type="button">EFFACER CE CLASSEMENT</button>
+        <button id="bouton-effacer-tout" class="bouton petit danger" type="button">TOUT EFFACER</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 3. ÉCRAN DE JEU ===================== -->
+  <section id="ecran-jeu" class="ecran">
+    <div class="barre-haut">
+      <button id="bouton-retour" class="bouton petit" type="button">◀ MENU</button>
+      <h2 id="titre-jeu"></h2>
+      <button id="bouton-pause" class="bouton petit" type="button" aria-label="Pause">❚❚</button>
+    </div>
+
+    <!-- Le « HUD » : la ligne d'informations (score, niveau, vies…) -->
+    <div class="hud">
+      <span id="hud-gauche"></span>
+      <span id="hud-droite"></span>
+    </div>
+
+    <!-- Chaque jeu dessine ici (un <canvas> ou une grille de <div>) -->
+    <div id="zone-jeu"></div>
+
+    <!-- Boutons tactiles propres à certains jeux (visibles seulement sur écran tactile) -->
+    <div id="zone-tactile"></div>
+
+    <!-- Fenêtre superposée : écran de départ, pause, fin de partie -->
+    <div id="overlay" class="overlay cache">
+      <div id="overlay-contenu" class="panneau"></div>
+    </div>
+  </section>
+
+  <!-- ===================== SCRIPTS =====================
+       L'ORDRE COMPTE : chaque fichier utilise ce que les précédents ont créé.
+       1) arcade.js crée l'objet « Arcade »
+       2) les outils communs
+       3) les jeux (chacun s'inscrit dans Arcade.jeux, dans l'ordre du menu)
+       4) main.js, en dernier, démarre le site -->
+  <script src="js/arcade.js"></script>
+  <script src="js/scores.js"></script>
+  <script src="js/controles.js"></script>
+  <script src="js/ecrans.js"></script>
+
+  <script src="js/games/jeu2048.js"></script>
+  <script src="js/games/snake.js"></script>
+  <script src="js/games/blocs.js"></script>
+  <script src="js/games/casse-briques.js"></script>
+  <script src="js/games/ping-pong.js"></script>
+  <script src="js/games/flappy.js"></script>
+  <script src="js/games/invasion.js"></script>
+  <script src="js/games/demineur.js"></script>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

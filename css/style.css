@@ -1,0 +1,726 @@
+/* ==========================================================================
+   style.css — Toute l'apparence de l'Arcade Néon
+   --------------------------------------------------------------------------
+   Plan du fichier :
+     1. Variables (couleurs, police)
+     2. Base de la page + effet « écran cathodique »
+     3. Boutons
+     4. Menu d'accueil (cartes des jeux)
+     5. Écran de jeu (barre du haut, HUD, zone de jeu, boutons tactiles)
+     6. Fenêtre superposée (départ / pause / fin)
+     7. Tableaux de scores et page Classements
+     8. Styles propres à 2048
+     9. Styles propres au Démineur
+    10. Animations
+   ========================================================================== */
+
+
+/* ---------- 1. VARIABLES ----------
+   Une « variable CSS » (--nom) se définit une fois et se réutilise partout
+   avec var(--nom). Pour changer une couleur sur tout le site, il suffit de
+   la modifier ici. */
+:root {
+  --fond: #07071a;
+  --fond-2: #0e0e2c;
+  --fond-3: #16164a;
+  --texte: #e8e8ff;
+  --gris: #8a8ab8;
+
+  --rose: #ff2bd6;
+  --cyan: #00f0ff;
+  --vert: #39ff14;
+  --jaune: #ffe600;
+  --orange: #ff8a00;
+  --violet: #a64dff;
+  --rouge: #ff3355;
+  --bleu: #4d7cff;
+
+  /* Couleur du jeu en cours (changée par js/main.js) */
+  --couleur-jeu: var(--cyan);
+
+  /* Police pixel, puis polices de secours si elle n'est pas chargée */
+  --police: "Press Start 2P", "Courier New", Courier, monospace;
+}
+
+
+/* ---------- 2. BASE DE LA PAGE ---------- */
+* {
+  box-sizing: border-box; /* la bordure et le padding sont inclus dans la taille */
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--police);
+}
+
+body {
+  min-height: 100vh;
+  /* Un halo violet en haut de l'écran, comme une salle d'arcade */
+  background: radial-gradient(ellipse at top, #22104a 0%, var(--fond) 65%) fixed;
+  -webkit-tap-highlight-color: transparent; /* pas de flash gris au toucher */
+}
+
+/* Lignes horizontales par-dessus tout le site : effet « vieil écran » */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none; /* ne bloque pas les clics */
+  z-index: 100;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 2px,
+    rgba(0, 0, 0, 0.18) 2px 3px
+  );
+}
+
+/* L'attribut HTML « hidden » cache vraiment l'élément */
+[hidden] {
+  display: none !important;
+}
+
+/* Un seul écran visible à la fois */
+.ecran {
+  display: none;
+}
+.ecran.actif {
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3 {
+  font-weight: normal;
+}
+
+
+/* ---------- 3. BOUTONS ---------- */
+.bouton {
+  font-family: var(--police);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--fond);
+  background: var(--cyan);
+  border: none;
+  padding: 14px 18px;
+  cursor: pointer;
+  /* Une lueur + une ombre décalée pour l'effet « bouton d'arcade » */
+  box-shadow: 0 0 12px var(--cyan), 4px 4px 0 #006d75;
+  transition: transform 0.08s, filter 0.15s;
+  touch-action: manipulation; /* pas de zoom au double-toucher */
+}
+.bouton:hover {
+  filter: brightness(1.15);
+}
+.bouton:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 12px var(--cyan), 1px 1px 0 #006d75;
+}
+.bouton:focus-visible {
+  outline: 3px solid var(--jaune);
+  outline-offset: 3px;
+}
+.bouton:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.bouton.gros {
+  font-size: 14px;
+  padding: 16px 22px;
+}
+.bouton.petit {
+  font-size: 10px;
+  padding: 10px 12px;
+}
+.bouton.secondaire {
+  background: transparent;
+  color: var(--cyan);
+  border: 2px solid var(--cyan);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+}
+.bouton.danger {
+  background: transparent;
+  color: var(--rouge);
+  border: 2px solid var(--rouge);
+  box-shadow: 0 0 8px rgba(255, 51, 85, 0.4);
+}
+.bouton.option {
+  background: transparent;
+  color: var(--texte);
+  border: 2px solid var(--gris);
+  box-shadow: none;
+  font-size: 10px;
+  padding: 10px;
+}
+.bouton.option.choisi {
+  color: var(--fond);
+  background: var(--couleur-jeu);
+  border-color: var(--couleur-jeu);
+  box-shadow: 0 0 10px var(--couleur-jeu);
+}
+
+.boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+
+/* ---------- 4. MENU D'ACCUEIL ---------- */
+#ecran-menu {
+  align-items: center;
+  gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 28px 16px 40px;
+}
+
+.fronton {
+  text-align: center;
+}
+
+.titre-neon {
+  margin: 0;
+  font-size: clamp(30px, 9vw, 64px);
+  line-height: 1.3;
+  color: var(--rose);
+  /* Plusieurs ombres colorées = effet tube néon */
+  text-shadow:
+    0 0 4px #fff,
+    0 0 10px var(--rose),
+    0 0 22px var(--rose),
+    0 0 40px var(--rose);
+}
+.titre-neon span {
+  color: var(--cyan);
+  text-shadow:
+    0 0 4px #fff,
+    0 0 10px var(--cyan),
+    0 0 22px var(--cyan),
+    0 0 40px var(--cyan);
+}
+
+.clignote {
+  margin: 18px 0 0;
+  font-size: 12px;
+  color: var(--jaune);
+  animation: clignoter 1.2s steps(2, start) infinite;
+}
+
+/* La grille des cartes : autant de colonnes que la largeur le permet */
+.grille-jeux {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.carte-jeu {
+  --couleur: var(--cyan); /* remplacée par la couleur du jeu (main.js) */
+  font-family: var(--police);
+  color: var(--texte);
+  background: linear-gradient(180deg, var(--fond-3), var(--fond-2));
+  border: 3px solid var(--couleur);
+  box-shadow: 0 0 10px var(--couleur), inset 0 0 18px rgba(0, 0, 0, 0.6);
+  padding: 12px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  touch-action: manipulation;
+}
+.carte-jeu:hover,
+.carte-jeu:focus-visible {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 0 22px var(--couleur), inset 0 0 18px rgba(0, 0, 0, 0.6);
+  outline: none;
+}
+.carte-jeu .numero {
+  align-self: flex-start;
+  font-size: 8px;
+  color: var(--gris);
+}
+.carte-jeu .icone {
+  width: 64px;
+  height: auto;
+  image-rendering: pixelated; /* garde les pixels bien nets */
+}
+.carte-jeu .nom {
+  font-size: 12px;
+  color: var(--couleur);
+  text-shadow: 0 0 8px var(--couleur);
+}
+.carte-jeu .desc {
+  font-size: 8px;
+  line-height: 1.7;
+  color: var(--gris);
+}
+.carte-jeu .record {
+  font-size: 8px;
+  color: var(--jaune);
+}
+
+.alerte {
+  font-size: 9px;
+  line-height: 1.7;
+  color: var(--orange);
+  text-align: center;
+  max-width: 480px;
+}
+.pied {
+  font-size: 8px;
+  color: var(--gris);
+}
+
+
+/* ---------- 5. ÉCRAN DE JEU ---------- */
+#ecran-jeu {
+  position: relative;
+  height: 100vh;
+  height: 100dvh; /* « dvh » = hauteur réelle visible sur mobile */
+  max-width: 760px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.barre-haut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  padding-top: max(10px, env(safe-area-inset-top));
+}
+.barre-haut h2 {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+  font-size: clamp(11px, 3.6vw, 16px);
+  color: var(--couleur-jeu);
+  text-shadow: 0 0 10px var(--couleur-jeu);
+}
+.espace-vide {
+  width: 80px;
+}
+
+.hud {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 14px 6px;
+  min-height: 1.6em;
+  font-size: 10px;
+  color: var(--jaune);
+  text-shadow: 0 0 6px var(--jaune);
+}
+
+/* La zone de jeu prend toute la place restante */
+#zone-jeu {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  /* Empêche le défilement et le zoom quand on balaye sur mobile */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+#zone-jeu canvas {
+  display: block;
+  background: #000010;
+  image-rendering: pixelated;
+  outline: 2px solid var(--couleur-jeu);
+  box-shadow: 0 0 18px var(--couleur-jeu);
+}
+
+#zone-tactile {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 6px 12px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#zone-tactile:empty {
+  display: none;
+}
+/* Sur un ordinateur avec souris, on cache les boutons tactiles */
+@media (hover: hover) and (pointer: fine) {
+  #zone-tactile {
+    display: none;
+  }
+}
+
+.bouton-tactile {
+  flex: 1;
+  max-width: 150px;
+  min-height: 62px;
+  font-family: var(--police);
+  font-size: 14px;
+  color: var(--couleur-jeu);
+  background: rgba(0, 240, 255, 0.06);
+  border: 2px solid var(--couleur-jeu);
+  border-radius: 12px;
+  box-shadow: 0 0 8px var(--couleur-jeu);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.bouton-tactile.actif {
+  background: var(--couleur-jeu);
+  color: var(--fond);
+}
+
+
+/* ---------- 6. FENÊTRE SUPERPOSÉE ---------- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  padding: 16px;
+  overflow-y: auto;
+  background: rgba(4, 4, 18, 0.9);
+}
+.overlay.cache {
+  display: none;
+}
+
+.panneau {
+  margin: auto; /* centre le panneau, même s'il est plus haut que l'écran */
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 16px;
+  text-align: center;
+  background: var(--fond-2);
+  border: 3px solid var(--couleur-jeu);
+  box-shadow: 0 0 22px var(--couleur-jeu);
+}
+.panneau h2,
+.panneau h3,
+.panneau p {
+  margin: 0;
+}
+.titre-overlay {
+  font-size: 20px;
+  line-height: 1.4;
+  color: var(--couleur-jeu);
+  text-shadow: 0 0 12px var(--couleur-jeu);
+}
+.titre-fin {
+  color: var(--rose);
+  text-shadow: 0 0 12px var(--rose);
+}
+.panneau h3 {
+  font-size: 10px;
+  color: var(--jaune);
+}
+.description,
+.details {
+  font-size: 9px;
+  line-height: 1.8;
+  color: var(--gris);
+}
+.score-final {
+  font-size: 16px;
+  color: var(--jaune);
+  text-shadow: 0 0 10px var(--jaune);
+}
+.nouveau-record {
+  font-size: 11px;
+  color: var(--vert);
+  text-shadow: 0 0 10px var(--vert);
+  animation: clignoter 0.8s steps(2, start) infinite;
+}
+
+/* Liste des contrôles : 2 colonnes (touche → action) */
+.bloc-controles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.liste-controles {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 12px;
+  text-align: left;
+  font-size: 8px;
+  line-height: 1.6;
+}
+.liste-controles .touche {
+  color: var(--cyan);
+  white-space: nowrap;
+}
+.liste-controles .action {
+  color: var(--texte);
+}
+
+.bloc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.choix-options {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.bloc-records p,
+.record-actuel {
+  font-size: 9px;
+  line-height: 1.8;
+  color: var(--jaune);
+}
+
+/* Formulaire du pseudo */
+.saisie-pseudo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.saisie-pseudo label {
+  font-size: 10px;
+}
+.saisie-pseudo input {
+  width: 100%;
+  max-width: 260px;
+  font-family: var(--police);
+  font-size: 16px; /* 16px minimum : sinon l'iPhone zoome sur le champ */
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--jaune);
+  background: #000010;
+  border: 2px solid var(--jaune);
+  padding: 12px;
+  outline: none;
+  box-shadow: 0 0 10px rgba(255, 230, 0, 0.4);
+}
+.fin-bas {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+
+/* ---------- 7. TABLEAUX DE SCORES ET PAGE CLASSEMENTS ---------- */
+.tableau-scores {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 10px;
+}
+.tableau-scores li {
+  display: grid;
+  grid-template-columns: 3em 1fr auto;
+  gap: 10px;
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px dashed rgba(138, 138, 184, 0.25);
+}
+.tableau-scores .rang {
+  color: var(--gris);
+}
+.tableau-scores .valeur {
+  color: var(--cyan);
+}
+.tableau-scores .podium-1 .pseudo { color: var(--jaune); }
+.tableau-scores .podium-2 .pseudo { color: #d6d6ff; }
+.tableau-scores .podium-3 .pseudo { color: var(--orange); }
+.tableau-scores li.surligne {
+  background: rgba(57, 255, 20, 0.15);
+  animation: clignoter 0.8s steps(2, start) 5;
+}
+
+#ecran-classements {
+  max-width: 640px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+#ecran-classements .barre-haut h2 {
+  color: var(--jaune);
+  text-shadow: 0 0 10px var(--jaune);
+}
+.contenu-classements {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 16px 40px;
+}
+.onglets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.onglets:empty {
+  display: none;
+}
+.onglet {
+  --couleur: var(--cyan);
+  font-family: var(--police);
+  font-size: 9px;
+  padding: 8px 10px;
+  color: var(--couleur);
+  background: transparent;
+  border: 2px solid var(--couleur);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.onglet.actif {
+  color: var(--fond);
+  background: var(--couleur);
+  box-shadow: 0 0 12px var(--couleur);
+}
+.titre-classement {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--couleur-jeu);
+  text-shadow: 0 0 8px var(--couleur-jeu);
+}
+#conteneur-tableau {
+  border: 2px solid var(--couleur-jeu);
+  box-shadow: 0 0 14px var(--couleur-jeu);
+  background: var(--fond-2);
+  padding: 8px;
+}
+
+
+/* ---------- 8. 2048 ----------
+   « --l » est la largeur du plateau en pixels (calculée par JavaScript).
+   Les tailles en dépendent pour que tout grandisse avec l'écran. */
+.plateau-2048 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: calc(var(--l) * 0.025);
+  padding: calc(var(--l) * 0.025);
+  background: #0b0b26;
+  outline: 3px solid var(--couleur-jeu);
+  box-shadow: 0 0 18px var(--couleur-jeu);
+}
+.case-2048 {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+}
+.tuile {
+  --c: var(--cyan);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--l) * 0.075);
+  color: var(--c);
+  background: #0b0b26;
+  border: 3px solid var(--c);
+  box-shadow: 0 0 10px var(--c), inset 0 0 12px var(--c);
+  text-shadow: 0 0 8px var(--c);
+}
+.tuile.chiffres-3 { font-size: calc(var(--l) * 0.06); }
+.tuile.chiffres-4 { font-size: calc(var(--l) * 0.047); }
+.tuile.chiffres-5,
+.tuile.chiffres-6 { font-size: calc(var(--l) * 0.038); }
+
+/* Une couleur néon par valeur de tuile */
+.v2    { --c: #8a8aff; }
+.v4    { --c: var(--cyan); }
+.v8    { --c: var(--vert); }
+.v16   { --c: #b6ff3b; }
+.v32   { --c: var(--jaune); }
+.v64   { --c: var(--orange); }
+.v128  { --c: var(--rouge); }
+.v256  { --c: var(--rose); }
+.v512  { --c: var(--violet); }
+.v1024 { --c: var(--bleu); }
+.v2048 { --c: #ffffff; }
+.v-grand { --c: #ffffff; background: #2a0a3a; }
+
+.tuile.apparition { animation: apparaitre 0.15s ease-out; }
+.tuile.fusion { animation: fusionner 0.18s ease-out; }
+
+
+/* ---------- 9. DÉMINEUR ---------- */
+.plateau-demineur {
+  display: grid;
+  grid-template-columns: repeat(var(--colonnes), 1fr);
+  gap: 2px;
+  padding: 4px;
+  background: #0b0b26;
+  outline: 3px solid var(--couleur-jeu);
+  box-shadow: 0 0 18px var(--couleur-jeu);
+}
+.case-dem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--l) / var(--colonnes) * 0.45);
+  background: #23235e;
+  border: 1px solid #3a3a8a;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.case-dem:hover {
+  background: #2e2e78;
+}
+.case-dem.revelee {
+  background: #07071a;
+  border-color: #14143a;
+  cursor: default;
+}
+.case-dem.explosee {
+  background: var(--rouge);
+}
+.case-dem.n1 { color: var(--cyan); }
+.case-dem.n2 { color: var(--vert); }
+.case-dem.n3 { color: var(--rose); }
+.case-dem.n4 { color: var(--violet); }
+.case-dem.n5 { color: var(--orange); }
+.case-dem.n6 { color: var(--jaune); }
+.case-dem.n7 { color: var(--rouge); }
+.case-dem.n8 { color: #ffffff; }
+
+
+/* ---------- 10. ANIMATIONS ---------- */
+@keyframes clignoter {
+  to { visibility: hidden; }
+}
+@keyframes apparaitre {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+@keyframes fusionner {
+  50% { transform: scale(1.15); }
+}
+
+/* Petits écrans : on resserre un peu */
+@media (max-width: 420px) {
+  .grille-jeux {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .carte-jeu .icone {
+    width: 52px;
+  }
+}
